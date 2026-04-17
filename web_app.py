@@ -1,172 +1,180 @@
 import streamlit as st
 import random
 import time
-import json
+import base64
 
 # --- 1. ENGINE CONFIGURATION ---
-st.set_page_config(page_title="Brawl Stars PERSISTENT", page_icon="💾", layout="wide")
+st.set_page_config(page_title="Brawl Stars OMNI", page_icon="💣", layout="wide")
 
-# --- 2. JAVASCRIPT ORQALI SAQLASH (LocalStorage) ---
-# Bu qism ma'lumotlarni brauzer yopilganda ham saqlab qoladi
-def save_data():
-    data = {
-        "gold": st.session_state.gold,
-        "gems": st.session_state.gems,
-        "trophies": st.session_state.trophies,
-        "xp": st.session_state.xp,
-        "inv": st.session_state.inv,
-        "claimed_tiers": st.session_state.claimed_tiers,
-        "plus_active": st.session_state.plus_active
-    }
-    # Streamlitda ma'lumotlarni session_state orqali ushlab turamiz
-    # Haqiqiy doimiy saqlash uchun server-side database kerak, 
-    # lekin hozirgi kod session davomida barqaror ishlaydi.
-    pass
-
-# --- 3. SUPREME VISUALS ---
+# --- 2. THE ULTIMATE NEON CSS ---
 st.markdown("""
     <style>
-    .stApp { background: #020617; color: #f8fafc; }
-    .status-bar {
-        background: rgba(30, 41, 59, 0.7);
-        border: 2px solid #38bdf8;
-        border-radius: 15px; padding: 15px;
+    .stApp { background: #010101; color: #00ffcc; font-family: 'Orbitron', sans-serif; }
+    .main-card {
+        background: rgba(0, 20, 40, 0.9);
+        border: 2px solid #00ffcc; border-radius: 25px;
+        padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+    }
+    .resource-bar {
         display: flex; justify-content: space-around;
-        margin-bottom: 25px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+        background: #000; border: 1px solid #00ffcc;
+        border-radius: 50px; padding: 15px; margin-bottom: 20px;
     }
-    .card {
-        background: #1e293b; border-radius: 12px; padding: 15px;
-        border: 1px solid #334155; margin-bottom: 10px;
+    .brawl-pass-plus {
+        background: linear-gradient(135deg, #6200ff, #ff0055);
+        color: white; border-radius: 20px; padding: 25px;
+        border: 3px solid #fff; text-shadow: 2px 2px 5px #000;
     }
-    .plus-badge {
-        background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        color: black; padding: 5px 12px; border-radius: 20px;
-        font-weight: bold; font-size: 12px;
+    .battle-btn {
+        background: linear-gradient(90deg, #ff0055, #6200ff);
+        color: white; font-weight: 900; border-radius: 15px;
+        height: 60px; border: none; box-shadow: 0 0 20px #ff0055;
     }
+    .brawler-box {
+        background: #050505; border: 1px solid #333;
+        border-radius: 15px; padding: 15px; transition: 0.3s;
+    }
+    .brawler-box:hover { border-color: #00ffcc; transform: scale(1.05); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. DATA INITIALIZATION ---
-if 'gold' not in st.session_state:
-    # Boshlang'ich balans 0
-    st.session_state.gold = 0
-    st.session_state.gems = 0
-    st.session_state.trophies = 0
-    st.session_state.xp = 0
-    st.session_state.inv = {"Shelly": {"lvl": 1, "pwr": 300, "rarity": "Common", "icon": "🔫"}}
-    st.session_state.claimed_tiers = []
-    st.session_state.plus_active = False
+# --- 3. PERSISTENCE LOGIC (SAVE/LOAD) ---
+def init_state():
+    if 'gold' not in st.session_state:
+        st.session_state.update({
+            'gold': 0, 'gems': 0, 'trophies': 0, 'xp': 0,
+            'inv': {"Shelly": {"lvl": 1, "pwr": 300, "icon": "🔫", "rank": "Bronza"}},
+            'claimed': [], 'plus': False, 'league': "Bronza I"
+        })
 
-BRAWLERS_DB = {
-    "Leon": {"rarity": "Legendary", "pwr": 600, "icon": "🦎"},
-    "Crow": {"rarity": "Legendary", "pwr": 580, "icon": "🦅"},
-    "Mortis": {"rarity": "Mythic", "pwr": 500, "icon": "Bat"},
-    "Surge": {"rarity": "Chromatic", "pwr": 550, "icon": "🤖"}
+init_state()
+
+# --- 4. GAME DATA ---
+PASS_Tiers = {
+    1: {"xp": 500, "reward": "1,000 Gold", "val": 1000, "type": "gold"},
+    3: {"xp": 5000, "reward": "100 Gems", "val": 100, "type": "gems"},
+    5: {"xp": 20000, "reward": "Mega Box", "type": "box"},
+    10: {"xp": 100000, "reward": "PLUS: 50,000 Gold", "val": 50000, "type": "gold"},
+    15: {"xp": 400000, "reward": "ULTRA FINAL: 400,000 GOLD", "val": 400000, "type": "gold"}
 }
 
-# --- 5. BRAWL PASS SYSTEM (EXTENDED) ---
-PASS_REWARDS = {
-    1: {"xp": 1000, "reward": "500 Gold", "type": "gold", "val": 500},
-    2: {"xp": 5000, "reward": "50 Gems", "type": "gems", "val": 50},
-    3: {"xp": 15000, "reward": "Big Box", "type": "box"},
-    4: {"xp": 50000, "reward": "2500 Gold", "type": "gold", "val": 2500},
-    5: {"xp": 100000, "reward": "Legendary Spike", "type": "brawler", "name": "Spike"},
-    6: {"xp": 250000, "reward": "PLUS: 50,000 Gold", "type": "gold", "val": 50000},
-    7: {"xp": 500000, "reward": "PLUS FINAL: 400,000 Gold", "type": "gold", "val": 400000}
-}
+# --- 5. FUNCTIONS ---
+def save_game():
+    save_obj = {
+        "gold": st.session_state.gold, "gems": st.session_state.gems,
+        "trophies": st.session_state.trophies, "xp": st.session_state.xp,
+        "inv": st.session_state.inv, "claimed": st.session_state.claimed,
+        "plus": st.session_state.plus
+    }
+    st.session_state.save_code = base64.b64encode(str(save_obj).encode()).decode()
 
-# --- 6. CORE LOGIC ---
-def play_match():
-    with st.spinner("⚔️ Jang ketmoqda..."):
-        time.sleep(0.8)
-    win = random.choice([True, False, False]) # Yutish qiyinroq
-    if win:
-        st.session_state.trophies += 10
-        st.session_state.gold += 100
-        st.session_state.xp += 500
-        st.toast("G'alaba! +500 XP")
+def load_game(code):
+    try:
+        decoded = eval(base64.b64decode(code).decode())
+        st.session_state.update(decoded)
+        st.success("Ma'lumotlar tiklandi!")
+    except: st.error("Xato kod!")
+
+def start_battle():
+    with st.spinner("🚀 JANG KETMOQDA..."): time.sleep(1)
+    if random.random() > 0.5:
+        st.session_state.trophies += 15
+        st.session_state.gold += 200
+        st.session_state.xp += 800
+        st.balloons()
     else:
-        st.session_state.trophies = max(0, st.session_state.trophies - 5)
-        st.session_state.xp += 150
-        st.toast("Mag'lubiyat! +150 XP")
+        st.session_state.trophies = max(0, st.session_state.trophies - 10)
+        st.session_state.xp += 200
 
-# --- 7. UI ---
+# --- 6. UI LAYOUT ---
+st.markdown("<h1 style='text-align: center;'>💣 BRAWL STARS: OMNI v18 💣</h1>", unsafe_allow_html=True)
+
+# Resources Panel
 st.markdown(f"""
-    <div class="status-bar">
-        <span style="color: #fbbf24;">💰 {st.session_state.gold:,}</span>
-        <span style="color: #38bdf8;">💎 {st.session_state.gems}</span>
-        <span style="color: #f8fafc;">🏆 {st.session_state.trophies}</span>
-        {"<span class='plus-badge'>PASS PLUS ACTIVE</span>" if st.session_state.plus_active else ""}
+    <div class="resource-bar">
+        <span>💰 {st.session_state.gold:,}</span>
+        <span>💎 {st.session_state.gems}</span>
+        <span>🏆 {st.session_state.trophies}</span>
+        <span>⚔️ {st.session_state.league}</span>
     </div>
     """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 1.5, 1])
+col_main, col_pass = st.columns([1, 1.2])
 
-with col1:
-    st.header("🎮 O'yin")
-    if st.button("🔥 JANGGA KIRISH (PLAY)", use_container_width=True):
-        play_match()
+with col_main:
+    st.markdown("<div class='main-card'>", unsafe_allow_html=True)
+    st.header("🎮 O'YIN MAYDONI")
+    if st.button("🔥 START SUPREME BATTLE", use_container_width=True):
+        start_battle()
         st.rerun()
     
     st.write("---")
-    st.subheader("🛒 Do'kon")
-    if st.button("BRAWL PASS PLUS (200 💎)", disabled=st.session_state.plus_active, use_container_width=True):
-        if st.session_state.gems >= 200:
-            st.session_state.gems -= 200
-            st.session_state.plus_active = True
-            st.success("Plus faollashdi!")
-            st.rerun()
-        else:
-            st.error("Gemlar yetarli emas!")
+    st.subheader("🎰 DAILY LUCKY SPIN")
+    if st.button("SPIN (TEKIN)"):
+        win = random.randint(10, 1000)
+        st.session_state.gold += win
+        st.toast(f"Yutuq: {win} Oltin!")
+        st.rerun()
 
-with col2:
-    st.header("🎫 Brawl Pass Plus")
-    st.write(f"XP Progress: **{st.session_state.xp:,}**")
+    st.write("---")
+    st.subheader("💾 SAVE / LOAD")
+    if st.button("O'YINNI SAQLASH (Save)"):
+        save_game()
+        st.code(st.session_state.save_code)
+        st.info("Yuqoridagi kodni nusxalab oling! Keyingi safar shu bilan tiklaysiz.")
     
-    for tier, data in PASS_REWARDS.items():
-        is_plus = tier >= 6
-        claimed = tier in st.session_state.claimed_tiers
-        unlocked = st.session_state.xp >= data['xp']
+    load_code = st.text_input("Save kodni kiriting:")
+    if st.button("YUKLASH (Load)"):
+        load_game(load_code)
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with col_pass:
+    st.markdown("<div class='brawl-pass-plus'>", unsafe_allow_html=True)
+    st.header("🎫 BRAWL PASS ULTRA PLUS")
+    st.write(f"PROGRES: **{st.session_state.xp:,} / 400,000 XP**")
+    st.progress(min(st.session_state.xp / 400000, 1.0))
+    
+    if not st.session_state.plus:
+        if st.button("BUY PASS PLUS (500 💎)", use_container_width=True):
+            if st.session_state.gems >= 500:
+                st.session_state.plus = True
+                st.session_state.gems -= 500
+                st.rerun()
+
+    for t, d in PASS_Tiers.items():
+        is_plus = t >= 10
+        claimed = t in st.session_state.claimed
+        unlocked = st.session_state.xp >= d['xp']
         
-        # UI for tiers
-        locked_by_plus = is_plus and not st.session_state.plus_active
-        opacity = "0.5" if locked_by_plus else "1"
-        
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            st.write(f"**Tier {t}:** {d['reward']} ({d['xp']:,} XP)")
+        with c2:
+            if claimed: st.write("✅")
+            elif unlocked:
+                if is_plus and not st.session_state.plus: st.write("🔒 Plus")
+                elif st.button("GET", key=f"t_{t}"):
+                    if d['type'] == 'gold': st.session_state.gold += d['val']
+                    elif d['type'] == 'gems': st.session_state.gems += d['val']
+                    st.session_state.claimed.append(t)
+                    st.rerun()
+            else: st.write("❌")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- 7. COLLECTION ---
+st.write("---")
+st.header("👤 MY BRAWLERS")
+cols = st.columns(4)
+for i, (name, data) in enumerate(st.session_state.inv.items()):
+    with cols[i % 4]:
         st.markdown(f"""
-            <div class="card" style="opacity: {opacity}; border-left: 4px solid {'#fbbf24' if is_plus else '#38bdf8'};">
-                <div style="display: flex; justify-content: space-between;">
-                    <b>Tier {tier}: {data['reward']}</b>
-                    <span>{data['xp']:,} XP</span>
-                </div>
+            <div class='brawler-box'>
+                <h3>{data['icon']} {name}</h3>
+                <p>PWR: {data['pwr']} | LVL: {data['lvl']}</p>
             </div>
             """, unsafe_allow_html=True)
-        
-        if not claimed:
-            if unlocked:
-                if locked_by_plus:
-                    st.button("🔒 Plus Kerak", key=f"l_{tier}", disabled=True)
-                else:
-                    if st.button("MUKOFOTNI OLISH", key=f"b_{tier}", use_container_width=True):
-                        if data['type'] == 'gold': st.session_state.gold += data['val']
-                        elif data['type'] == 'gems': st.session_state.gems += data['val']
-                        elif data['type'] == 'brawler':
-                            st.session_state.inv[data['name']] = {"lvl": 1, "pwr": 600, "rarity": "Legendary", "icon": "🌵"}
-                        st.session_state.claimed_tiers.append(tier)
-                        st.rerun()
-            else:
-                st.button(f"{data['xp'] - st.session_state.xp} XP kerak", key=f"w_{tier}", disabled=True, use_container_width=True)
-        else:
-            st.button("✅ OLINGAN", key=f"c_{tier}", disabled=True, use_container_width=True)
 
-with col3:
-    st.header("👤 Kolleksiya")
-    for name, data in st.session_state.inv.items():
-        st.markdown(f"""
-            <div class="card">
-                <b>{data['icon']} {name}</b><br>
-                <small>PWR: {data['pwr']} | LVL: {data['lvl']}</small>
-            </div>
-            """, unsafe_allow_html=True)
-
-# Footer
-st.sidebar.warning("Diqqat: Hozircha doimiy saqlash faqat session davomida ishlaydi. Ma'lumotlar o'chmasligi uchun 'Keep App Alive' sozlamasidan foydalaning.")
+if st.sidebar.button("♻️ FULL REBOOT"):
+    st.session_state.clear()
+    st.rerun()
