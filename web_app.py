@@ -3,7 +3,6 @@ import random
 import time
 import base64
 import json
-from datetime import datetime, timedelta
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(page_title="Brawl Stars HARDCORE", page_icon="⏳", layout="wide")
@@ -30,7 +29,7 @@ st.markdown("""
         border: 3px solid #fff; border-radius: 20px; padding: 20px;
         text-align: center; box-shadow: 0 0 30px rgba(255, 0, 85, 0.6);
     }
-    .small-timer { font-size: 10px; color: #eee; opacity: 0.8; }
+    .small-timer { font-size: 11px; color: #fff; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 5px; }
     .brawler-card {
         background: #050505; border: 1px solid #00ffcc;
         border-radius: 15px; padding: 15px; text-align: center;
@@ -69,10 +68,12 @@ def load_from_code(code):
     except: st.error("❌ ОШИБКА КОДА!")
 
 def open_box(cost, chance, is_mega=False):
+    # Xatolikni oldini olish uchun cost son ekanligini tekshiramiz
+    cost = int(cost)
     if st.session_state.gold >= cost:
         st.session_state.gold -= cost
         with st.spinner("⏳ СИНХРОНИЗАЦИЯ..."):
-            time.sleep(1) # Ochilishni biroz sekinlashtirdik (qiyinlik uchun)
+            time.sleep(1)
             if random.random() < chance:
                 name = random.choice(list(BRAWLERS_DB.keys()))
                 if name not in st.session_state.inv:
@@ -87,10 +88,10 @@ def open_box(cost, chance, is_mega=False):
                 st.session_state.gold += gain
                 st.toast(f"📦 +{gain} ЗОЛОТА")
     else:
-        st.error("НЕДОСТАТОЧНО ЗОЛОТА!")
+        st.error(f"Недостаточно золота! Нужно {cost:,}")
 
 # --- 5. UI LAYOUT ---
-st.markdown("<h1 style='text-align: center; color: #00ffcc;'>🔱 BRAWL STARS: HARDCORE v18.7 🔱</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #00ffcc;'>🔱 BRAWL STARS: HARDCORE v18.8 🔱</h1>", unsafe_allow_html=True)
 
 st.markdown(f"""
     <div class="status-bar">
@@ -105,7 +106,7 @@ col_shop, col_arena, col_pass = st.columns([1, 1, 1.4])
 with col_shop:
     st.header("🛒 SHOP")
     
-    # MEGA ULTRA EVENT BOX
+    # MEGA ULTRA EVENT BOX - TypeError FIXED (10000 vergulsiz yozildi)
     st.markdown("""
         <div class='event-card'>
             <span class='small-timer'>ОСТАЛОСЬ: 24 ЧАСА</span>
@@ -114,10 +115,12 @@ with col_shop:
             <small>Шанс на бойца: 60%</small>
         </div>
         """, unsafe_allow_html=True)
-    if st.button("ОТКРЫТЬ EVENT BOX (10,000)", use_container_width=True):
-        open_box(10,000, 0.60, is_mega=True); st.rerun()
+    if st.button("ОТКРЫТЬ MEGA BOX (10,000)", key="mega_btn", use_container_width=True):
+        open_box(10000, 0.60, is_mega=True)
+        st.rerun()
     
     st.write("---")
+    # Boshqa qutilar
     for cost, name, color in [(500, "SMALL", "#333"), (1000, "BIG", "#00d2ff"), (3000, "ULTRA", "#ff0055")]:
         st.markdown(f"<div class='box-card' style='border-color: {color};'><h3>{name} BOX</h3><p>{cost}</p></div>", unsafe_allow_html=True)
         if st.button(f"ОТКРЫТЬ {name}", key=f"b_{cost}", use_container_width=True):
@@ -128,9 +131,8 @@ with col_arena:
     st.header("⚔️ ARENA")
     st.warning("Сложность: ВЫСОКАЯ (Награда снижена)")
     if st.button("🔥 START HARD BATTLE", use_container_width=True, type="primary"):
-        # MUKOFOTLARNI QIYINLASHTIRDIK
-        st.session_state.gold += 100 # Oldin 300 edi
-        st.session_state.xp += 600   # Oldin 1500 edi
+        st.session_state.gold += 100
+        st.session_state.xp += 600
         st.session_state.trophies += 12
         st.toast("Тяжелая победа! +100 Золота")
         st.rerun()
