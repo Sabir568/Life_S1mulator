@@ -1,146 +1,127 @@
 import streamlit as st
-import random
 import time
 
 # Конфигурация
-st.set_page_config(page_title="Brawl Stars Case Simulator", page_icon="⭐", layout="wide")
+st.set_page_config(page_title="Luxury Magnat", page_icon="🏎️", layout="wide")
 
-# --- СТИЛЬ BRAWL STARS ---
+# --- СТИЛЬ И ФОН ---
 st.markdown("""
     <style>
     .stApp {
-        background: linear-gradient(135deg, #1e90ff, #1c1c1c);
+        background: linear-gradient(135deg, #000000, #1a1a1a, #001f3f);
         color: #ffffff;
     }
-    .lobby-card {
-        background: rgba(0, 0, 0, 0.6);
-        border: 4px solid #f1c40f;
-        border-radius: 25px;
+    .money-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #00d2ff;
+        border-radius: 20px;
         padding: 20px;
         text-align: center;
-        box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+        margin-bottom: 25px;
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
     }
-    .resource-text {
-        font-size: 24px;
+    .money-text {
+        font-size: 50px;
         font-weight: bold;
-        color: #f1c40f;
-        text-shadow: 2px 2px 5px #000;
+        color: #00d2ff;
     }
-    .brawler-card {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px;
+    .shop-card {
+        background: rgba(255, 255, 255, 0.03);
         border-radius: 15px;
-        margin-bottom: 5px;
-        border: 1px solid #555;
-        text-align: left;
-    }
-    .box-btn {
+        padding: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
         transition: 0.3s;
     }
-    .box-btn:hover {
-        transform: scale(1.1);
+    .shop-card:hover {
+        border-color: #00d2ff;
+        transform: translateY(-5px);
+    }
+    .inv-item {
+        background: rgba(0, 210, 255, 0.1);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        border-left: 4px solid #00d2ff;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- ИНИЦИАЛИЗАЦИЯ ---
-if 'coins' not in st.session_state: st.session_state.coins = 100
-if 'gems' not in st.session_state: st.session_state.gems = 10
-if 'brawlers' not in st.session_state: st.session_state.brawlers = ["Shelly"]
-if 'last_reward' not in st.session_state: st.session_state.last_reward = ""
+# --- ЛОГИКА ---
+if 'money' not in st.session_state: st.session_state.money = 0
+if 'click' not in st.session_state: st.session_state.click = 10 # Pul topish qiyinroq (10$)
+if 'income' not in st.session_state: st.session_state.income = 0
+if 'inv' not in st.session_state: st.session_state.inv = []
+if 'last_t' not in st.session_state: st.session_state.last_t = time.time()
 
-# Данные о ящиках
-BOXES = {
-    "Brawl Box": {"cost": 50, "gems_cost": 0, "img": "📦", "luck": ["El Primo", "Barley", "Poco", "Rosa"]},
-    "Big Box": {"cost": 200, "gems_cost": 0, "img": "🎁", "luck": ["Colt", "Bull", "Jessie", "Brock", "Dynamike"]},
-    "Mega Box": {"cost": 0, "gems_cost": 40, "img": "🔵", "luck": ["Piper", "Pam", "Frank", "Bibi", "Mortis", "Leon", "Crow", "Spike"]}
-}
+# Пассивный доход
+now = time.time()
+diff = int(now - st.session_state.last_t)
+if diff >= 1:
+    st.session_state.money += diff * st.session_state.income
+    st.session_state.last_t = now
 
-# --- ФУНКЦИЯ ОТКРЫТИЯ ---
-def open_box(box_name):
-    box = BOXES[box_name]
-    if random.random() < 0.3: # 30% шанс на нового бравлера
-        new_brawler = random.choice(box["luck"])
-        if new_brawler not in st.session_state.brawlers:
-            st.session_state.brawlers.append(new_brawler)
-            st.session_state.last_reward = f"НОВЫЙ БРАВЛЕР: {new_brawler}! 🎉"
-            st.balloons()
-        else:
-            bonus_coins = random.randint(50, 150)
-            st.session_state.coins += bonus_coins
-            st.session_state.last_reward = f"Повторка {new_brawler}! Дали {bonus_coins} монет."
-    else:
-        bonus_coins = random.randint(20, 80)
-        st.session_state.coins += bonus_coins
-        st.session_state.last_reward = f"Выпало {bonus_coins} монет."
+# --- ИНТЕРФЕЙС ---
+st.markdown(f"""
+    <div class='money-card'>
+        <div style='color: #888;'>ТЕКУЩИЙ БАЛАНС</div>
+        <div class='money-text'>{st.session_state.money:,.0f} $</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --- ЛОББИ ---
-st.title("⭐ Brawl Stars: Lobby & Case Simulator")
+c1, c2 = st.columns([1, 2.5])
 
-# Панель ресурсов
-res_col1, res_col2, res_col3 = st.columns(3)
-with res_col1: st.markdown(f"<div class='resource-text'>💰 Монеты: {st.session_state.coins}</div>", unsafe_allow_html=True)
-with res_col2: st.markdown(f"<div class='resource-text'>💎 Гемы: {st.session_state.gems}</div>", unsafe_allow_html=True)
-with res_col3: st.markdown(f"<div class='resource-text'>👤 Бойцы: {len(st.session_state.brawlers)}</div>", unsafe_allow_html=True)
-
-st.write("---")
-
-col_main, col_inv = st.columns([2, 1])
-
-# --- ЦЕНТРАЛЬНОЕ ЛОББИ ---
-with col_main:
-    st.markdown("<div class='lobby-card'>", unsafe_allow_html=True)
-    st.image("https://images.unsplash.com/photo-1614036417651-efe591214972?w=500", caption="Brawl Stars Lobby")
-    st.write("### 🎁 Магазин ящиков")
-    
-    b1, b2, b3 = st.columns(3)
-    
-    with b1:
-        st.write("📦 **Brawl Box**")
-        if st.button("Открыть (50 💰)", key="b1"):
-            if st.session_state.coins >= 50:
-                st.session_state.coins -= 50
-                open_box("Brawl Box")
-                st.rerun()
-            else: st.error("Мало монет!")
-            
-    with b2:
-        st.write("🎁 **Big Box**")
-        if st.button("Открыть (200 💰)", key="b2"):
-            if st.session_state.coins >= 200:
-                st.session_state.coins -= 200
-                open_box("Big Box")
-                st.rerun()
-            else: st.error("Мало монет!")
-
-    with b3:
-        st.write("🔵 **Mega Box**")
-        if st.button("Открыть (40 💎)", key="b3"):
-            if st.session_state.gems >= 40:
-                st.session_state.gems -= 40
-                open_box("Mega Box")
-                st.rerun()
-            else: st.error("Мало гемов!")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    if st.session_state.last_reward:
-        st.info(st.session_state.last_reward)
-
-    # Кнопка заработка
-    st.write("---")
-    if st.button("КЛИКАТЬ ДЛЯ ПОЛУЧЕНИЯ МОНЕТ ⚡", use_container_width=True):
-        st.session_state.coins += 10
-        if random.random() < 0.05: st.session_state.gems += 1
+with c1:
+    st.header("💼 Работа")
+    if st.button("ЗАРАБОТАТЬ 💵", use_container_width=True):
+        st.session_state.money += st.session_state.click
         st.rerun()
+    
+    st.write(f"За клик: **{st.session_state.click}$**")
+    st.write(f"В секунду: **{st.session_state.income}$**")
+    
+    st.write("---")
+    st.header("📦 Гараж")
+    if not st.session_state.inv:
+        st.write("У вас нет имущества")
+    else:
+        for item in st.session_state.inv:
+            st.markdown(f"<div class='inv-item'>✅ {item}</div>", unsafe_allow_html=True)
 
-# --- СПИСОК БОЙЦОВ ---
-with col_inv:
-    st.header("👤 Мои Бойцы")
-    for b in st.session_state.brawlers:
-        st.markdown(f"<div class='brawler-card'>⭐ {b}</div>", unsafe_allow_html=True)
+with c2:
+    st.header("🏁 Автосалон и Бизнес")
+    
+    # Список крутых машин и недвижимости
+    store = [
+        {"name": "BMW 3 G20", "price": 45000, "img": "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=500", "inc": 50},
+        {"name": "BMW M5 CS", "price": 140000, "img": "https://images.unsplash.com/photo-1619362227493-270bb3f07a7c?w=500", "inc": 200},
+        {"name": "Mercedes G-Class", "price": 250000, "img": "https://images.unsplash.com/photo-1520031441872-265e4ff70366?w=500", "inc": 500},
+        {"name": "Mercedes GT63 S", "price": 180000, "img": "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=500", "inc": 350},
+        {"name": "Автосервис Tuning", "price": 500000, "img": "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?w=500", "inc": 1500},
+        {"name": "Небоскреб Офис", "price": 2000000, "img": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500", "inc": 10000}
+    ]
 
-# Сброс
-if st.sidebar.button("Сбросить аккаунт"):
+    scols = st.columns(2)
+    for idx, item in enumerate(store):
+        with scols[idx % 2]:
+            st.markdown("<div class='shop-card'>", unsafe_allow_html=True)
+            st.image(item['img'], use_container_width=True)
+            st.markdown(f"<h3>{item['name']}</h3>", unsafe_allow_html=True)
+            st.write(f"Цена: **{item['price']:,} $**")
+            st.write(f"Доход: **+{item['inc']}$/сек**")
+            
+            if st.button(f"Купить {item['name']}", key=f"b_{idx}", use_container_width=True):
+                if st.session_state.money >= item['price']:
+                    st.session_state.money -= item['price']
+                    st.session_state.inv.append(item['name'])
+                    st.session_state.income += item['inc']
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("Недостаточно средств!")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# Очистка
+if st.sidebar.button("Сбросить игру"):
     st.session_state.clear()
     st.rerun()
