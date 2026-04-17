@@ -117,4 +117,22 @@ with col_shop:
             st.markdown("<div class='shop-item'>", unsafe_allow_html=True)
             # Отображаем картинку через st.image для надежности
             st.image(item['img'], use_container_width=True)
-            st.markdown(f"<h3 style='color: #FFD700;'>{item['name']}</h3>", unsafe_allow
+            st.markdown(f"<h3 style='color: #FFD700;'>{item['name']}</h3>", unsafe_allow_html=True)
+            st.write(f"Цена: **{item['price']:,} $**")
+            
+            if st.button(f"Купить {item['name']}", key=f"item_{idx}", use_container_width=True):
+                if st.session_state.money >= item['price']:
+                    st.session_state.money -= item['price']
+                    st.session_state.inventory.append(item['name'])
+                    st.session_state.income += item['inc']
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("Недостаточно денег!")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# Сброс
+st.sidebar.markdown("### ⚙️ Настройки")
+if st.sidebar.button("Начать заново 🔄"):
+    st.session_state.clear()
+    st.rerun()
