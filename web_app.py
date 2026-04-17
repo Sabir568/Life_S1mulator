@@ -51,7 +51,6 @@ BRAWLERS_DB = {
     "Мортис": {"rarity": "Мифический", "pwr": 500, "icon": "🦇"}
 }
 
-# 15 ta darajali Brawl Pass (Oxiri 400,000 Gold)
 PASS_TIERS = {
     1: {"xp": 500, "reward": "1,000 Золота", "val": 1000, "type": "gold"},
     2: {"xp": 2000, "reward": "50 Гемов", "val": 50, "type": "gems"},
@@ -63,7 +62,7 @@ PASS_TIERS = {
     15: {"xp": 400000, "reward": "ФИНАЛ PLUS: 400,000 ЗОЛОТА", "val": 400000, "type": "gold"}
 }
 
-# --- 4. LOGIC ---
+# --- 4. FUNCTIONS ---
 def open_box(cost, brawler_chance):
     if st.session_state.gold >= cost:
         st.session_state.gold -= cost
@@ -95,8 +94,18 @@ def save_game():
     }
     return base64.b64encode(str(data).encode()).decode()
 
+def load_game(code):
+    try:
+        decoded = eval(base64.b64decode(code).decode())
+        st.session_state.update(decoded)
+        st.success("✅ Прогресс успешно загружен!")
+        time.sleep(1)
+        st.rerun()
+    except:
+        st.error("❌ Неверный код сохранения!")
+
 # --- 5. UI ---
-st.markdown("<h1 style='text-align: center; color: #00ffcc;'>💣 BRAWL STARS OMNI: RU v18.3</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #00ffcc;'>💣 BRAWL STARS OMNI: RU v18.4</h1>", unsafe_allow_html=True)
 
 # Status Bar
 st.markdown(f"""
@@ -111,18 +120,14 @@ col_shop, col_arena, col_pass = st.columns([1, 1, 1.4])
 
 with col_shop:
     st.header("🛒 Магазин")
-    
-    # Box 500
     st.markdown("<div class='box-card'><h3>📦 Малый ящик</h3><p>500 Золота</p></div>", unsafe_allow_html=True)
     if st.button("ОТКРЫТЬ (500)", key="b500", use_container_width=True):
         open_box(500, 0.05); st.rerun()
 
-    # Box 1000
     st.markdown("<div class='box-card'><h3>🔵 Большой ящик</h3><p>1,000 Золота</p></div>", unsafe_allow_html=True)
     if st.button("ОТКРЫТЬ (1,000)", key="b1000", use_container_width=True):
         open_box(1000, 0.12); st.rerun()
 
-    # Box 3000
     st.markdown("<div class='box-card' style='border-color: #ff0055;'><h3>🔥 Ультра ящик</h3><p>3,000 Золота</p></div>", unsafe_allow_html=True)
     if st.button("ОТКРЫТЬ (3,000)", key="b3000", use_container_width=True):
         open_box(3000, 0.30); st.rerun()
@@ -133,20 +138,31 @@ with col_arena:
         with st.spinner("Бой..."):
             time.sleep(0.5)
             st.session_state.gold += 250
-            st.session_state.xp += 1000 # Ko'proq XP tezroq Brawl Pass uchun
+            st.session_state.xp += 1000 
             st.session_state.trophies += 20
             st.rerun()
     
     st.write("---")
-    st.subheader("💾 Сохранение")
+    st.subheader("💾 Сохранение & Загрузка")
+    
+    # Save
     if st.button("СОХРАНИТЬ ПРОГРЕСС", use_container_width=True):
         code = save_game()
         st.code(code)
-        st.caption("Скопируйте этот код!")
+        st.caption("Скопируйте этот код и сохраните его!")
+
+    # Load (Siz so'ragan narsa)
+    st.write("---")
+    input_code = st.text_input("Введите код для загрузки:", placeholder="Вставьте код сюда...")
+    if st.button("ЗАГРУЗИТЬ ИГРУ", use_container_width=True):
+        if input_code:
+            load_game(input_code)
+        else:
+            st.warning("Сначала введите код!")
 
 with col_pass:
     st.header("🎫 Бравл Пасс")
-    st.write(f"Ваш XP: **{st.session_state.xp:,}**")
+    st.write(f"XP: **{st.session_state.xp:,}**")
     st.progress(min(st.session_state.xp / 400000, 1.0))
     
     if not st.session_state.plus:
@@ -164,7 +180,6 @@ with col_pass:
         claimed = t in st.session_state.claimed
         unlocked = st.session_state.xp >= d['xp']
         
-        # UI for tiers
         status = "✅" if claimed else ("🎁" if unlocked else "🔒")
         color = "#fbbf24" if is_plus else "#f8fafc"
         
