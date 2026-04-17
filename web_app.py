@@ -1,115 +1,112 @@
 import streamlit as st
 import time
+import random
 
-# Sayt sozlamalari (Vizual rejim)
-st.set_page_config(page_title="Samarqand Magnati 2.0 🏰", page_icon="💰", layout="wide")
+# Настройки сайта
+st.set_page_config(page_title="Симулятор Магната 🏰", page_icon="💰", layout="wide")
 
-# --- CUSTOM CSS (Dizaynni chiroyli qilish) ---
+# --- СТИЛИ (CSS) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0E1117; color: white; }
-    .gold-display {
-        font-size: 70px; font-weight: bold; color: #00FF00;
+    .money-display {
+        font-size: 60px; font-weight: bold; color: #00FF00;
         text-align: center; border: 3px solid #00FF00;
-        border-radius: 25px; padding: 15px; margin-bottom: 25px;
-        text-shadow: 2px 2px 4px #000;
+        border-radius: 20px; padding: 10px; margin-bottom: 20px;
+        background: rgba(0, 255, 0, 0.1);
     }
-    .shop-card {
-        background-color: #1E1E1E; padding: 15px;
+    .card {
+        background-color: #1E1E1E; padding: 20px;
         border-radius: 15px; border: 1px solid #333;
         margin-bottom: 20px; text-align: center;
-        transition: 0.3s;
     }
-    .shop-card:hover { transform: scale(1.02); border-color: #00FF00; }
-    .prop-img { border-radius: 10px; margin-bottom: 10px; width: 100%; height: 150px; object-fit: cover; }
-    .stat-box { background-color: #262730; padding: 20px; border-radius: 15px; border-left: 5px solid #FF4B4B; }
+    .img-fluid { border-radius: 10px; margin-bottom: 10px; width: 100%; height: 180px; object-fit: cover; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- O'YIN HOLATINI BOSHQARISH ---
+# --- СОСТОЯНИЕ ИГРЫ ---
 if 'money' not in st.session_state: st.session_state.money = 0
-if 'click_power' not in st.session_state: st.session_state.click_power = 50  # Boshlanishiga kattaroq
-if 'passive_income' not in st.session_state: st.session_state.passive_income = 0
+if 'click_power' not in st.session_state: st.session_state.click_power = 100
+if 'passive' not in st.session_state: st.session_state.passive = 0
 if 'inventory' not in st.session_state: st.session_state.inventory = []
 if 'last_time' not in st.session_state: st.session_state.last_time = time.time()
 
-# Avtomatik daromadni hisoblash
+# Пассивный доход
 now = time.time()
 diff = now - st.session_state.last_time
 if diff >= 1:
-    st.session_state.money += int(diff * st.session_state.passive_income)
+    st.session_state.money += int(diff * st.session_state.passive)
     st.session_state.last_time = now
 
-# --- ASOSIY EKRAN ---
-st.markdown(f"<div class='gold-display'>{st.session_state.money:,.0f} $</div>", unsafe_allow_html=True)
+# --- ВЕРХНЯЯ ПАНЕЛЬ ---
+st.markdown(f"<div class='money-display'>{st.session_state.money:,.0f} $</div>", unsafe_allow_html=True)
 
-col_work, col_shop = st.columns([1, 2])
+tab1, tab2, tab3 = st.tabs(["💼 Работа", "🚗 Автосалон и Недвижимость", "🎰 Казино"])
 
-# --- 1. ISHLASH BO'LIMI ---
-with col_work:
-    st.markdown("<div class='stat-box'>", unsafe_allow_html=True)
-    st.subheader("Biznesni boshqarish 📈")
-    st.write(f"Har bir bosish: **{st.session_state.click_power:,.0f} $**")
-    st.write(f"Avtomatik daromad: **{st.session_state.passive_income:,.0f} $/sek**")
-    
-    if st.button("PUL QAZIB OLISH ⛏️", use_container_width=True):
-        st.session_state.money += st.session_state.click_power
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.write("---")
-    # INVENTAR
-    st.subheader("Mening Mulklarim 📦")
-    if not st.session_state.inventory:
-        st.write("Hozircha faqat orzular bor...")
-    else:
-        for item in st.session_state.inventory:
-            st.write(f"✅ {item}")
+# --- ВКЛАДКА 1: РАБОТА ---
+with tab1:
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.header("Заработок")
+        if st.button("КЛИКАТЬ И ЗАРАБАТЫВАТЬ 💸", use_container_width=True):
+            st.session_state.money += st.session_state.click_power
+            st.rerun()
+    with col_b:
+        st.header("Статистика")
+        st.write(f"Доход за клик: **{st.session_state.click_power} $**")
+        st.write(f"Пассивный доход: **{st.session_state.passive} $/сек**")
+        st.subheader("Моё имущество:")
+        if not st.session_state.inventory: st.write("Пусто")
+        for item in st.session_state.inventory: st.write(f"✅ {item}")
 
-# --- 2. VIZUAL DO'KON BO'LIMI ---
-with col_shop:
-    st.header("Premium Bozori 🛍️")
-    
-    # MULKLAR RO'YXATI (RASMLAR BILAN)
-    # Eslatma: Rasmlar internetdan olingan namuna havolalar.
-    properties = [
-        {"nomi": "Spark (Oq)", "narxi": 12000, "img": "https://img.images.uz/2023/10/26/16983053644485.jpg", "turi": "moshina", "daromad": 0},
-        {"nomi": "Gentra (Qora)", "narxi": 18000, "img": "https://avtoelon.uz/m/posts/6561579b76c898a96e5793e2/image-1.jpg", "turi": "moshina", "daromad": 0},
-        {"nomi": "Malibu 2 Turbo", "narxi": 35000, "img": "https://motor.uz/files/cache/motor.uz/uploads/malibu/original/5e3b5e4368153_main_image.jpg", "turi": "moshina", "daromad": 0},
-        {"nomi": "Toshkent City (Xonadon)", "narxi": 150000, "img": "https://tashkentcity.uz/storage/photos/shares/banners/banner_3.jpg", "turi": "uy", "daromad": 100},
-        {"nomi": "Hovli (G'azalkent)", "narxi": 300000, "img": "https://img.images.uz/2022/10/27/16668744577815.jpg", "turi": "uy", "daromad": 250},
+# --- ВКЛАДКА 2: МАГАЗИН ---
+with tab2:
+    items = [
+        {"name": "Chevrolet Spark", "price": 12000, "img": "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400", "income": 0},
+        {"name": "Chevrolet Gentra", "price": 18000, "img": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400", "income": 0},
+        {"name": "Chevrolet Malibu 2", "price": 35000, "img": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=400", "income": 0},
+        {"name": "Ресторан в центре", "price": 100000, "img": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=400", "income": 200},
+        {"name": "Пентхаус Tashkent City", "price": 250000, "img": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=400", "income": 500},
+        {"name": "Частный Остров", "price": 1000000, "img": "https://images.unsplash.com/photo-1505881502353-a1986add3762?auto=format&fit=crop&q=80&w=400", "income": 2000},
     ]
-
-    # Kartochkalarni 2 ta ustunga bo'lish
-    shop_cols = st.columns(2)
     
-    for i, prop in enumerate(properties):
-        col_idx = i % 2 # 0 yoki 1
-        with shop_cols[col_idx]:
-            st.markdown(f"<div class='shop-card'>", unsafe_allow_html=True)
-            # Rasm
-            st.markdown(f"<img src='{prop['img']}' class='prop-img'>", unsafe_allow_html=True)
-            # Ma'lumot
-            st.write(f"### {prop['nomi']}")
-            st.write(f"Narxi: **{prop['narxi']:,} $**")
-            if prop['daromad'] > 0:
-                st.write(f"Daromad: **+{prop['daromad']} $/sek**")
+    shop_cols = st.columns(3)
+    for idx, item in enumerate(items):
+        with shop_cols[idx % 3]:
+            st.markdown(f"<div class='card'>", unsafe_allow_html=True)
+            st.markdown(f"<img src='{item['img']}' class='img-fluid'>", unsafe_allow_html=True)
+            st.write(f"### {item['name']}")
+            st.write(f"Цена: **{item['price']:,} $**")
+            if item['income'] > 0: st.write(f"Доход: +{item['income']}$/сек")
             
-            # Sotib olish tugmasi
-            if st.button(f"Sotib olish ({prop['nomi']})", key=prop['nomi']):
-                if st.session_state.money >= prop['narxi']:
-                    st.session_state.money -= prop['narxi']
-                    st.session_state.inventory.append(f"{prop['nomi']}")
-                    st.session_state.passive_income += prop['daromad']
+            if st.button(f"Купить", key=item['name']):
+                if st.session_state.money >= item['price']:
+                    st.session_state.money -= item['price']
+                    st.session_state.inventory.append(item['name'])
+                    st.session_state.passive += item['income']
                     st.balloons()
-                    st.success("Tabriklaymiz! Muvaffaqiyatli xarid.")
                     st.rerun()
                 else:
-                    st.error("Mablag' yetarli emas!")
+                    st.error("Недостаточно денег!")
             st.markdown("</div>", unsafe_allow_html=True)
 
-# Yon panel
-st.sidebar.title("Sozlamalar")
-if st.sidebar.button("O'yinni noldan boshlash (Reset)"):
+# --- ВКЛАДКА 3: КАЗИНО ---
+with tab3:
+    st.header("Удвой свои деньги или потеряй всё! 🎰")
+    bet = st.number_input("Ваша ставка:", min_value=10, max_value=int(st.session_state.money) if st.session_state.money > 10 else 10)
+    if st.button("КРУТИТЬ РУЛЕТКУ"):
+        if st.session_state.money >= bet:
+            if random.random() > 0.5:
+                st.session_state.money += bet
+                st.success(f"ВЫ ВЫИГРАЛИ! +{bet}$")
+            else:
+                st.session_state.money -= bet
+                st.error(f"ВЫ ПРОИГРАЛИ! -{bet}$")
+            st.rerun()
+        else:
+            st.error("У вас нет денег для ставки!")
+
+# Сброс игры
+if st.sidebar.button("Начать заново (Reset)"):
     st.session_state.clear()
     st.rerun()
