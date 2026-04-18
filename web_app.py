@@ -4,149 +4,137 @@ import time
 import base64
 import json
 
-# --- 1. GLOBAL STYLING ---
-st.set_page_config(page_title="RECKAT STARS: ECONOMY", page_icon="💰", layout="wide")
+# --- 1. GLOBAL STYLING (DARK LUXURY) ---
+st.set_page_config(page_title="RECKAT LUXURY", page_icon="💎", layout="wide")
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Syncopate:wght@700&display=swap');
-    .stApp { background: #000205; color: #00ffcc; font-family: 'Orbitron', sans-serif; }
-    .main-header { font-family: 'Syncopate', sans-serif; font-size: 55px; text-align: center; color: #00ffcc; text-shadow: 0 0 30px #00ffcc; padding: 20px; border-bottom: 2px solid #00ffcc; }
-    .market-card { background: rgba(255, 217, 0, 0.05); border: 2px solid #f1c40f; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; transition: 0.3s; }
-    .market-card:hover { transform: translateY(-5px); box-shadow: 0 0 20px #f1c40f; }
-    .stat-box { background: rgba(0, 255, 204, 0.05); border: 1px solid #00ffcc; border-radius: 10px; padding: 15px; text-align: center; }
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;700&display=swap');
+    .stApp { background: #080808; color: #ffffff; font-family: 'Inter', sans-serif; }
+    .main-header { font-family: 'Syncopate', sans-serif; font-size: 50px; text-align: center; color: #fff; text-shadow: 0 0 20px #6200ff; padding: 30px; border-bottom: 1px solid #333; }
+    .luxury-card { background: #111; border: 1px solid #222; border-radius: 15px; padding: 0px; overflow: hidden; margin-bottom: 25px; transition: 0.4s; }
+    .luxury-card:hover { border-color: #6200ff; transform: scale(1.02); }
+    .price-tag { color: #00ffcc; font-weight: bold; font-size: 20px; padding: 10px; }
+    .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; border-radius: 10px; padding: 15px; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. ENGINE ---
+# --- 2. ASSETS DATA ---
+CARS = [
+    {"name": "BMW M3 G80", "price": 95000, "img": "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?q=80&w=1000&auto=format&fit=crop"},
+    {"name": "Porsche 911 GT3 RS", "price": 240000, "img": "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=1000&auto=format&fit=crop"},
+    {"name": "Lamborghini Revuelto", "price": 600000, "img": "https://images.unsplash.com/photo-1691436442656-7883391d848f?q=80&w=1000&auto=format&fit=crop"},
+    {"name": "Ferrari SF90", "price": 520000, "img": "https://images.unsplash.com/photo-1592198084033-aade902d1aae?q=80&w=1000&auto=format&fit=crop"}
+]
+
+HOUSES = [
+    {"name": "Bel Air Mansion, LA", "price": 2500000, "img": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1000&auto=format&fit=crop"},
+    {"name": "Beverly Hills Villa", "price": 4800000, "img": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1000&auto=format&fit=crop"},
+    {"name": "Malibu Oceanfront", "price": 7500000, "img": "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop"}
+]
+
+# --- 3. ENGINE (SAVE/LOAD TEGILMADI) ---
 if 'gold' not in st.session_state:
     st.session_state.update({
-        'gold': 0, 'gems': 0, 'xp': 0, 'level': 1,
-        'modules': ["Engine v1"], 'claimed_milestones': [],
-        'used_promos': [], 'in_warp': False, 'target_hp': 0,
-        'unlocked_promos': [] # Sotib olingan promolar
+        'gold': 1000, 'gems': 0, 'xp': 0, 'used_promos': [],
+        'inventory': []
     })
 
-def get_save():
-    data = {
-        "g": st.session_state.gold, "m": st.session_state.gems, "x": st.session_state.xp,
-        "l": st.session_state.level, "mod": st.session_state.modules, "cl": st.session_state.claimed_milestones,
-        "up": st.session_state.used_promos, "un": st.session_state.unlocked_promos
-    }
+def get_save_code():
+    data = {"g": st.session_state.gold, "m": st.session_state.gems, "x": st.session_state.xp, "up": st.session_state.used_promos, "inv": st.session_state.inventory}
     return base64.b64encode(json.dumps(data).encode()).decode()
 
-def load_save(code):
+def load_save_code(code):
     try:
         d = json.loads(base64.b64decode(code).decode())
-        st.session_state.update({
-            'gold':d['g'], 'gems':d['m'], 'xp':d['x'], 'level':d.get('l', 1),
-            'modules':d['mod'], 'claimed_milestones':d['cl'], 'used_promos':d.get('up', []),
-            'unlocked_promos': d.get('un', [])
-        })
+        st.session_state.update({'gold':d['g'], 'gems':d['m'], 'xp':d['x'], 'used_promos':d['up'], 'inventory':d['inv']})
         return True
     except: return False
 
-# --- 3. UI ---
-st.markdown("<div class='main-header'>RECKAT STARS: MARKET</div>", unsafe_allow_html=True)
+# --- 4. UI ---
+st.markdown("<div class='main-header'>RECKAT LUXURY MARKET</div>", unsafe_allow_html=True)
 
-# Dashboard
-c1, c2, c3, c4 = st.columns(4)
-with c1: st.markdown(f"<div class='stat-box'>💰 КРЕДИТЫ<br>{st.session_state.gold:,}</div>", unsafe_allow_html=True)
-with c2: st.markdown(f"<div class='stat-box'>💎 КРИСТАЛЛЫ<br>{st.session_state.gems:,}</div>", unsafe_allow_html=True)
-with c3: st.markdown(f"<div class='stat-box'>⭐ XP<br>{st.session_state.xp:,}</div>", unsafe_allow_html=True)
-with c4: st.markdown(f"<div class='stat-box'>📦 МОДУЛИ<br>{len(st.session_state.modules)}</div>", unsafe_allow_html=True)
+# Dash
+c1, c2, c3 = st.columns(3)
+with c1: st.markdown(f"<div class='stat-box'>💵 BANK BALANCE<br>${st.session_state.gold:,}</div>", unsafe_allow_html=True)
+with c2: st.markdown(f"<div class='stat-box'>💎 CRYSTALS<br>{st.session_state.gems:,}</div>", unsafe_allow_html=True)
+with c3: st.markdown(f"<div class='stat-box'>⭐ TOTAL XP<br>{st.session_state.xp:,}</div>", unsafe_allow_html=True)
 
 st.write("---")
 
-tab1, tab2, tab3 = st.tabs(["🛒 ЧЕРНЫЙ РЫНОК", "🌌 БИТВА", "🖥️ ТЕРМИНАЛ"])
+tab1, tab2, tab3, tab4 = st.tabs(["🏎️ CAR SHOWROOM", "🏡 REAL ESTATE", "⚔️ MISSIONS", "⚙️ SYSTEM"])
 
 with tab1:
-    st.header("🏪 RECKAT BLACK MARKET")
-    st.write("Здесь вы можете потратить свои Кредиты на эксклюзивные вещи.")
-    
-    m_col1, m_col2, m_col3 = st.columns(3)
-    
-    with m_col1:
-        st.markdown("<div class='market-card'><h3>GEM BUNDLE</h3><p>Цена: 15,000 💰</p><p>Дает: Промокод на 50 💎</p></div>", unsafe_allow_html=True)
-        if st.button("КУПИТЬ GEM BUNDLE"):
-            if st.session_state.gold >= 15000:
-                st.session_state.gold -= 15000
-                code = f"GEM-{random.randint(100,999)}"
-                st.session_state.unlocked_promos.append(code)
-                st.success(f"Куплено! Ваш код: {code}")
-            else: st.error("Недостаточно кредитов!")
-
-    with m_col2:
-        st.markdown("<div class='market-card'><h3>XP BOOST</h3><p>Цена: 8,000 💰</p><p>Дает: Промокод на 5,000 XP</p></div>", unsafe_allow_html=True)
-        if st.button("КУПИТЬ XP BOOST"):
-            if st.session_state.gold >= 8000:
-                st.session_state.gold -= 8000
-                code = f"XP-{random.randint(100,999)}"
-                st.session_state.unlocked_promos.append(code)
-                st.success(f"Куплено! Ваш код: {code}")
-            else: st.error("Недостаточно кредитов!")
-
-    with m_col3:
-        st.markdown("<div class='market-card'><h3>SIRIUS TECH</h3><p>Цена: 50,000 💰</p><p>Дает: Модуль 'SIRIUS CORE'</p></div>", unsafe_allow_html=True)
-        if st.button("КУПИТЬ SIRIUS TECH"):
-            if st.session_state.gold >= 50000:
-                st.session_state.gold -= 50000
-                st.session_state.modules.append("SIRIUS CORE")
-                st.balloons(); st.success("Технология SIRIUS добавлена в арсенал!")
-            else: st.error("Недостаточно кредитов!")
+    st.subheader("Exclusive Vehicles")
+    cols = st.columns(2)
+    for idx, car in enumerate(CARS):
+        with cols[idx % 2]:
+            st.markdown(f"""
+            <div class='luxury-card'>
+                <img src='{car['img']}' style='width:100%; height:250px; object-fit:cover;'>
+                <div style='padding:15px;'>
+                    <h3>{car['name']}</h3>
+                    <p class='price-tag'>Price: ${car['price']:,}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button(f"BUY {car['name']}", key=f"car_{idx}"):
+                if st.session_state.gold >= car['price']:
+                    st.session_state.gold -= car['price']
+                    st.session_state.inventory.append(car['name'])
+                    st.balloons(); st.success(f"Success! {car['name']} added to garage.")
+                else: st.error("Insufficient funds!")
 
 with tab2:
-    st.header("🌌 КОСМИЧЕСКАЯ АРЕНА")
-    if not st.session_state.in_warp:
-        if st.button("🚀 НАЧАТЬ ЗАЧИСТКУ СЕКТОРА", use_container_width=True):
-            st.session_state.in_warp = True
-            st.session_state.target_hp = random.randint(40, 80)
-            st.rerun()
-    else:
-        st.write(f"### СТАТУС ВРАГА: {st.session_state.target_hp}%")
-        st.progress(st.session_state.target_hp / 100)
-        if st.button("📡 ОГОНЬ!"):
-            st.session_state.target_hp -= random.randint(10, 20)
-            if st.session_state.target_hp <= 0:
-                st.session_state.in_warp = False
-                win = random.randint(1000, 3000)
-                st.session_state.gold += win
-                st.session_state.xp += 800
-                st.success(f"Сектор очищен! +{win} 💰"); st.balloons()
-            st.rerun()
+    st.subheader("Los Angeles Estates")
+    for idx, house in enumerate(HOUSES):
+        st.markdown(f"""
+        <div class='luxury-card'>
+            <img src='{house['img']}' style='width:100%; height:400px; object-fit:cover;'>
+            <div style='padding:20px;'>
+                <h2>{house['name']}</h2>
+                <p class='price-tag'>Market Price: ${house['price']:,}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(f"PURCHASE {house['name']}", key=f"house_{idx}"):
+            if st.session_state.gold >= house['price']:
+                st.session_state.gold -= house['price']
+                st.session_state.inventory.append(house['name'])
+                st.balloons(); st.success(f"Welcome home! {house['name']} is yours.")
+            else: st.error("Bank rejected the transaction. Not enough money.")
 
 with tab3:
-    st.header("🖥️ СИСТЕМНЫЙ ТЕРМИНАЛ")
-    t_col1, t_col2 = st.columns(2)
-    with t_col1:
-        st.subheader("Активация кода")
-        p_input = st.text_input("Введите код (купленный или секретный):").strip()
-        if st.button("ВВОД"):
-            if p_input.startswith("GEM-") and p_input in st.session_state.unlocked_promos:
-                st.session_state.gems += 50
-                st.session_state.unlocked_promos.remove(p_input)
-                st.success("Активировано: +50 💎")
-            elif p_input.startswith("XP-") and p_input in st.session_state.unlocked_promos:
-                st.session_state.xp += 5000
-                st.session_state.unlocked_promos.remove(p_input)
-                st.success("Активировано: +5,000 XP")
-            elif p_input == "REKCATv22" and "REKCATv22" not in st.session_state.used_promos:
-                st.session_state.gold += 250; st.session_state.gems += 30; st.session_state.used_promos.append("REKCATv22")
-                st.success("Бонус v22 получен!")
-            elif p_input == "KHIVA90":
-                st.session_state.gold += 9000; st.session_state.gems += 90; st.success("Привет из Хивы!")
-            else: st.error("Неверный код или уже использован.")
+    st.subheader("Earn Money & XP")
+    if st.button("💰 EXECUTE HIGH-STAKES MISSION (+$10,000 | +500 XP)", use_container_width=True):
+        st.session_state.gold += 10000
+        st.session_state.xp += 500
+        st.toast("Mission Accomplished!"); time.sleep(0.5); st.rerun()
+
+with tab4:
+    st.subheader("Terminal & Recovery")
+    sc1, sc2 = st.columns(2)
+    with sc1:
+        if st.button("📝 GENERATE SAVE CODE"): st.code(get_save_code())
+        l_code = st.text_input("ENTER LOAD CODE:")
+        if st.button("📥 RESTORE DATA"):
+            if load_save_code(l_code): st.success("Data restored!"); st.rerun()
+    with sc2:
+        promo = st.text_input("PROMO CODE:").strip()
+        if st.button("ACTIVATE"):
+            if promo == "REKCATv22" and "REKCATv22" not in st.session_state.used_promos:
+                st.session_state.gold += 250; st.session_state.gems += 30; st.session_state.used_promos.append("REKCATv22"); st.balloons()
+            elif promo == "KHIVA90":
+                st.session_state.gold += 9000; st.session_state.gems += 90; st.success("Bonus Activated!")
+            elif promo == "APRIL2026":
+                st.session_state.inventory.append("Sirius Edition"); st.success("Special Item Unlocked!")
+            else: st.error("Invalid or already used code.")
             st.rerun()
-            
-    with t_col2:
-        st.subheader("Backup & Save")
-        if st.button("📝 СОЗДАТЬ КОД СОХРАНЕНИЯ"): st.code(get_save())
-        l_input = st.text_input("Загрузить код:")
-        if st.button("📥 ЗАГРУЗИТЬ"):
-            if load_save(l_input): st.success("Данные загружены!"); st.rerun()
 
 st.write("---")
-st.header(f"📦 ВАШИ МОДУЛИ ({len(st.session_state.modules)})")
-m_cols = st.columns(5)
-for idx, mod in enumerate(st.session_state.modules):
-    with m_cols[idx % 5]: st.info(mod)
+st.subheader(f"💼 MY ASSETS ({len(st.session_state.inventory)})")
+if st.session_state.inventory:
+    for item in st.session_state.inventory:
+        st.write(f"• {item}")
+else:
+    st.info("Your asset list is empty. Start shopping!")
