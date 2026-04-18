@@ -106,7 +106,7 @@ with tab2:
 
 with tab3:
     st.subheader("Earn Money & XP")
-    if st.button("💰 EXECUTE HIGH-STAKES MISSION (+$10,000 | +500 XP)", use_container_width=True):
+    if st.button("💰 EXECUTE HIGH-STAKES MISSION (+$100| +25 XP)", use_container_width=True):
         st.session_state.gold += 100
         st.session_state.xp += 25
         st.toast("Mission Accomplished!"); time.sleep(0.5); st.rerun()
