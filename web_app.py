@@ -1,126 +1,158 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(page_title="RECKAT BRAWL 2D", layout="wide")
-
-st.markdown("""
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Точка Доступних Цін</title>
     <style>
-    .main { background-color: #0a0a0a; color: white; }
-    h1 { text-align: center; color: #00ffcc; font-family: 'Arial Black'; }
+        /* Umumiy ko'rinish */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* Ukraina uslubidagi Header */
+        header {
+            background: linear-gradient(135deg, #0057b7 0%, #0057b7 50%, #ffd700 50%, #ffd700 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 3rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            background: rgba(0,0,0,0.3);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* Katalog qismi */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        /* Mahsulot kartalari */
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #0057b7;
+        }
+
+        .icon-box {
+            height: 180px;
+            background-color: #f1f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+
+        .card h2 {
+            margin: 20px 0 10px;
+            color: #0057b7;
+        }
+
+        .card p {
+            color: #888;
+            font-size: 0.9rem;
+            padding: 0 15px;
+        }
+
+        .status-badge {
+            background-color: #ff4757;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #222;
+            color: #777;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+        }
+
+        .contact-info {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
     </style>
-    <h1>RECKAT BRAWL: ARENA 2D</h1>
-""", unsafe_allow_html=True)
+</head>
+<body>
 
-# O'yin kodi JavaScript (Canvas) da yozilgan
-game_code = """
-<canvas id="gameCanvas" width="800" height="500" style="border:5px solid #6200ff; background: #111; display: block; margin: 0 auto;"></canvas>
+<header>
+    <h1>Точка Доступних Цін</h1>
+    <p>Ласкаво просимо до нашого онлайн-магазину!</p>
+</header>
 
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+<div class="container">
+    <div class="card">
+        <div class="icon-box">👟</div>
+        <h2>Взуття</h2>
+        <p>Великий вибір чоловічого та жіночого взуття.</p>
+        <div class="status-badge">Фото з'являться незабаром</div>
+    </div>
 
-    let player = { x: 400, y: 250, size: 20, color: "#00ffcc", speed: 5 };
-    let bullets = [];
-    let enemies = [];
-    let score = 0;
+    <div class="card">
+        <div class="icon-box">👕</div>
+        <h2>Одяг</h2>
+        <p>Стильний та комфортний одяг на кожен день.</p>
+        <div class="status-badge">Фото з'являться незабаром</div>
+    </div>
 
-    // Klaviatura boshqaruvi
-    let keys = {};
-    window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
-    window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
+    <div class="card">
+        <div class="icon-box">🩱</div>
+        <h2>Білизна</h2>
+        <p>Якісна білизна за найкращими цінами.</p>
+        <div class="status-badge">Фото з'являться незабаром</div>
+    </div>
 
-    // O'q otish
-    canvas.addEventListener("mousedown", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
-        bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 7, vy: Math.sin(angle) * 7 });
-    });
+    <div class="card">
+        <div class="icon-box">👜</div>
+        <h2>Сумки</h2>
+        <p>Аксесуари, що доповнять ваш образ.</p>
+        <div class="status-badge">Фото з'являться незабаром</div>
+    </div>
+</div>
 
-    function spawnEnemy() {
-        enemies.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: 15,
-            color: "red"
-        });
-    }
-    setInterval(spawnEnemy, 2000);
+<footer>
+    <div class="contact-info">Скоро відкриття асортименту!</div>
+    <p>&copy; 2026 Точка Доступних Цін. Україна.</p>
+</footer>
 
-    function update() {
-        // Harakat
-        if (keys['w'] && player.y > 0) player.y -= player.speed;
-        if (keys['s'] && player.y < canvas.height) player.y += player.speed;
-        if (keys['a'] && player.x > 0) player.x -= player.speed;
-        if (keys['d'] && player.x < canvas.width) player.x += player.speed;
-
-        // O'qlarni yangilash
-        bullets.forEach((b, index) => {
-            b.x += b.vx;
-            b.y += b.vy;
-            if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
-                bullets.splice(index, 1);
-            }
-        });
-
-        // Dushmanlar bilan to'qnashuv
-        enemies.forEach((e, ei) => {
-            bullets.forEach((b, bi) => {
-                let dist = Math.hypot(e.x - b.x, e.y - b.y);
-                if (dist < e.size) {
-                    enemies.splice(ei, 1);
-                    bullets.splice(bi, 1);
-                    score += 10;
-                }
-            });
-        });
-
-        draw();
-        requestAnimationFrame(update);
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Player
-        ctx.fillStyle = player.color;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bullets
-        ctx.fillStyle = "yellow";
-        bullets.forEach(b => {
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // Enemies
-        ctx.fillStyle = "red";
-        enemies.forEach(e => {
-            ctx.beginPath();
-            ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // Score
-        ctx.fillStyle = "white";
-        ctx.font = "20px Arial";
-        ctx.fillText("SCORE: " + score, 20, 30);
-    }
-
-    update();
-</script>
-"""
-
-# O'yinni saytga chiqarish
-components.html(game_code, height=600)
-
-st.sidebar.title("Boshqaruv")
-st.sidebar.info("""
-- **W, A, S, D** - Harakatlanish
-- **Sichqoncha chap tugmasi** - O'q otish
-- **Maqsad:** Qizil dushmanlarni yo'q qiling!
-""")
+</body>
+</html>
